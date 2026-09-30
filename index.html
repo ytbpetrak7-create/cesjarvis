@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>J.A.R.V.I.S. — Český hlasový asistent</title>
+<style>
+  :root { --bg:#0a0e17; --card:#121a2b; --accent:#00d4ff; --orange:#ed7d31; --text:#e8edf5; --muted:#8b98ad; }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:var(--bg); color:var(--text); font-family:'Segoe UI',Arial,sans-serif; line-height:1.6; }
+  header { text-align:center; padding:70px 20px 40px; background:radial-gradient(ellipse at center, #123 0%, var(--bg) 70%); }
+  header h1 { font-size:3em; letter-spacing:6px; color:var(--accent); text-shadow:0 0 25px rgba(0,212,255,.5); }
+  header p { color:var(--muted); font-size:1.2em; margin-top:10px; }
+  .btn { display:inline-block; margin-top:25px; padding:14px 40px; background:var(--accent); color:#04121a; font-weight:bold; font-size:1.1em; border-radius:8px; text-decoration:none; transition:.2s; }
+  .btn:hover { transform:scale(1.05); box-shadow:0 0 20px rgba(0,212,255,.6); }
+  section { max-width:1000px; margin:0 auto; padding:40px 20px; }
+  h2 { text-align:center; color:var(--accent); margin-bottom:30px; font-size:2em; }
+  .plans { display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:20px; }
+  .plan { background:var(--card); border:1px solid #223; border-radius:12px; padding:25px; text-align:center; position:relative; }
+  .plan.pop { border:2px solid var(--accent); box-shadow:0 0 25px rgba(0,212,255,.25); }
+  .plan h3 { font-size:1.4em; margin-bottom:5px; }
+  .price { font-size:2em; color:var(--accent); font-weight:bold; margin:10px 0; }
+  .plan ul { list-style:none; text-align:left; margin:15px 0; }
+  .plan li { padding:6px 0; border-bottom:1px solid #1c2740; font-size:.95em; }
+  .plan li:before { content:"✓ "; color:var(--accent); }
+  .plan a { display:inline-block; margin-top:10px; padding:10px 25px; border-radius:6px; text-decoration:none; font-weight:bold; background:#1e2c4a; color:var(--text); }
+  .plan.pop a { background:var(--accent); color:#04121a; }
+  .feat { display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:15px; }
+  .feat div { background:var(--card); padding:20px; border-radius:10px; border-left:4px solid var(--accent); }
+  .feat b { color:var(--accent); }
+  .req { background:var(--card); border-radius:10px; padding:25px; }
+  .req code { display:block; background:#000; padding:12px; border-radius:6px; margin:10px 0; color:var(--accent); overflow-x:auto; }
+  footer { text-align:center; padding:30px; color:var(--muted); border-top:1px solid #1c2740; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>J.A.R.V.I.S.</h1>
+  <p>Just A Rather Very Intelligent System — český hlasový asistent pro Windows</p>
+  <a class="btn" href="jarvis-free.zip" download>⬇ Stáhnout FREE verzi</a>
+</header>
+
+<section>
+  <h2>Edice a ceník</h2>
+  <div class="plans">
+    <div class="plan">
+      <h3>FREE</h3>
+      <div class="price">0 Kč</div>
+      <ul>
+        <li>Hlasové ovládání + TTS</li>
+        <li>Čas, datum, vtipy</li>
+        <li>Vyhledávání, otevírání webů</li>
+        <li>Konverzace</li>
+      </ul>
+      <a href="jarvis-free.zip" download>Stáhnout</a>
+    </div>
+    <div class="plan pop">
+      <h3>PRO ⭐</h3>
+      <div class="price">199 Kč</div>
+      <ul>
+        <li>Vše z FREE</li>
+        <li>Ovládání PC (zvuk, jas, screenshoty)</li>
+        <li>Discord ovládání</li>
+        <li>Kódovací pomoc</li>
+        <li>Učení vlastních příkazů</li>
+        <li>Monitoring + proaktivní chat</li>
+      </ul>
+      <a href="mailto:objednavky@jarvis.cz?subject=JARVIS%20PRO">Objednat</a>
+    </div>
+    <div class="plan">
+      <h3>MAX</h3>
+      <div class="price">499 Kč</div>
+      <ul>
+        <li>Vše z PRO</li>
+        <li>Godot generátor</li>
+        <li>PowerPoint prezentace</li>
+        <li>VS Code tipy, web test</li>
+        <li>Rozpoznávání kamerou</li>
+      </ul>
+      <a href="mailto:objednavky@jarvis.cz?subject=JARVIS%20MAX">Objednat</a>
+    </div>
+    <div class="plan">
+      <h3>TEAM</h3>
+      <div class="price">999 Kč</div>
+      <p style="color:var(--muted)">až 5 PC</p>
+      <ul>
+        <li>Vše z MAX</li>
+        <li>Sdílené příkazy mezi PC</li>
+        <li>Společná paměť</li>
+        <li>Podpora</li>
+      </ul>
+      <a href="mailto:objednavky@jarvis.cz?subject=JARVIS%20TEAM">Objednat</a>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>Co Jarvis umí</h2>
+  <div class="feat">
+    <div><b>🎙 Hlasové ovládání</b><br>Mluv česky — otevře weby, vyhledá, pustí hudbu, ovládá Discord.</div>
+    <div><b>💻 Ovládání PC</b><br>Hlasitost, jas, WiFi, screenshoty, uspání i vypnutí počítače.</div>
+    <div><b>👨‍💻 Programování</b><br>Píše a upravuje kód, analyzuje VS Code, radí tipy, generuje GDScript pro Godot.</div>
+    <div><b>📊 Prezentace</b><br>Vytvoří PowerPoint s textem z Wikipedie a volnými obrázky včetně zdrojů.</div>
+    <div><b>👁 Monitoring</b><br>Sleduje aktivitu, pozná co děláš a proaktivně nabídne pomoc.</div>
+    <div><b>🧠 Učí se</b><br>Příkazem „nauč se" ho naučíš vlastní povely. Pamatuje si tě.</div>
+  </div>
+</section>
+
+<section>
+  <h2>Instalace (2 minuty)</h2>
+  <div class="req">
+    <p>1. Stáhni a rozbal ZIP<br>2. Nainstaluj Python 3.10+ z <b>python.org</b><br>3. Spusť instalaci a pak Jarvise:</p>
+    <code>instalace.bat<br>spust.bat</code>
+    <p>Požadavky: Windows 10/11, mikrofon, internet (hlasové rozpoznávání a TTS).</p>
+  </div>
+</section>
+
+<footer>
+  J.A.R.V.I.S. • Vytvořil Petrak7 • Systémy jsou online
+</footer>
+
+</body>
+</html>

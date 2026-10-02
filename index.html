@@ -53,6 +53,7 @@
 <body>
 
 <div id="topbar">
+  <button id="adminBtn" onclick="otevriAdmin()" style="display:none;">🔧 Admin</button>
   <button id="loginBtn" onclick="otevriLogin()">👤 Přihlásit</button>
   <button id="kosikBtn" onclick="otevriKosik()">🛒 Košík (<b id="pocet">0</b>)</button>
 </div>
@@ -218,6 +219,19 @@
   </div>
 </div>
 
+<div id="adminModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.7);z-index:300;">
+  <div style="background:var(--card);max-width:520px;margin:8% auto;padding:25px;border-radius:12px;border:1px solid var(--accent);max-height:75vh;overflow-y:auto;">
+    <h3 style="color:var(--accent);margin-bottom:10px;">🔧 Admin — objednávky</h3>
+    <p id="aPocet" style="color:var(--muted);"></p>
+    <div id="aSeznam"></div>
+    <div style="display:flex;gap:10px;margin-top:15px;">
+      <button class="kbtn sec" style="flex:1;padding:12px;border-radius:6px;border:none;font-weight:bold;cursor:pointer;background:#1e2c4a;color:var(--text);" onclick="exportObj()">📥 Export JSON</button>
+      <button class="kbtn sec" style="flex:1;padding:12px;border-radius:6px;border:none;font-weight:bold;cursor:pointer;background:#1e2c4a;color:#c66;" onclick="smazObj()">🗑 Smazat vše</button>
+      <button class="kbtn sec" style="flex:1;padding:12px;border-radius:6px;border:none;font-weight:bold;cursor:pointer;background:#1e2c4a;color:var(--text);" onclick="zavriAdmin()">Zavřít</button>
+    </div>
+  </div>
+</div>
+
 <div id="modal">
   <div id="modalBox">
     <h3 style="color:var(--accent);margin-bottom:10px;">👤 Přihlášení (nepovinné)</h3>
@@ -232,6 +246,7 @@
 <script>
 const CENY = { PRO: 199, MAX: 499, TEAM: 999 };
 const ORDER_EMAIL = 'objednavky@jarvis.cz';
+const ADMIN_EMAIL = 'admin@jarvis.cz';
 let kosik = JSON.parse(localStorage.getItem('jarvis_kosik') || '[]');
 let uzivatel = JSON.parse(localStorage.getItem('jarvis_uzivatel') || 'null');
 function uloz() { localStorage.setItem('jarvis_kosik', JSON.stringify(kosik)); vykresli(); }
@@ -247,6 +262,36 @@ function vykresli() {
   });
   document.querySelector('#soucet b').textContent = celkem() + ' Kč';
   document.getElementById('loginBtn').textContent = uzivatel ? ('👤 ' + uzivatel.jmeno) : '👤 Přihlásit';
+  const jeAdmin = uzivatel && uzivatel.email && uzivatel.email.toLowerCase() === ADMIN_EMAIL;
+  document.getElementById('adminBtn').style.display = jeAdmin ? '' : 'none';
+}
+function getObj() { try { return JSON.parse(localStorage.getItem('jarvis_objednavky') || '[]'); } catch (e) { return []; } }
+function ulozObj(o) { const a = getObj(); a.unshift(o); localStorage.setItem('jarvis_objednavky', JSON.stringify(a)); }
+function otevriAdmin() {
+  const a = getObj();
+  const box = document.getElementById('aSeznam');
+  box.innerHTML = a.length ? '' : '<p style="color:var(--muted)">Zatím žádné objednávky.</p>';
+  a.forEach((o, i) => {
+    box.innerHTML += '<div class="kpol" style="display:block;"><b>#' + (a.length - i) + ' — ' + o.celkem + ' Kč</b> (' + escAdmin(o.datum) + ')<br>'
+      + escAdmin(o.polozky.join(', ')) + '<br>👤 ' + escAdmin(o.jmeno) + (o.email ? ' (' + escAdmin(o.email) + ')' : '')
+      + (o.poznamka ? '<br>📝 ' + escAdmin(o.poznamka) : '')
+      + '<br><span style="color:var(--muted)">stav: ' + escAdmin(o.stav) + '</span></div>';
+  });
+  document.getElementById('aPocet').textContent = 'Objednávek: ' + a.length;
+  document.getElementById('adminModal').style.display = 'block';
+}
+function escAdmin(t) { return String(t == null ? '' : t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+function zavriAdmin() { document.getElementById('adminModal').style.display = 'none'; }
+function exportObj() {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([JSON.stringify(getObj(), null, 2)], { type: 'application/json' }));
+  a.download = 'objednavky.json';
+  a.click();
+}
+function smazObj() {
+  if (!confirm('Smazat všechny objednávky?')) return;
+  localStorage.removeItem('jarvis_objednavky');
+  otevriAdmin();
 }
 function otevriKosik() { vykresli(); document.getElementById('drawer').classList.add('open'); }
 function zavriKosik() { document.getElementById('drawer').classList.remove('open'); }
@@ -284,13 +329,15 @@ async function odeslatForm() {
     });
     const d = await r.json();
     if (d.success) {
+      ulozObj({ datum: new Date().toLocaleString('cs-CZ'), polozky: kosik.slice(), celkem: celkem(), jmeno: jmeno, email: email, poznamka: poznamka, stav: 'odesláno' });
       stav.textContent = '✅ Objednávka odeslána! Ozveme se na ' + (email || 'tvůj e-mail') + '.';
       kosik = []; uloz();
       return;
     }
     throw 0;
   } catch (e) {
-    stav.textContent = '⚠ Přímé odeslání selhalo — zkopíruj objednávku tlačítkem níže a pošli ji mailem.';
+    ulozObj({ datum: new Date().toLocaleString('cs-CZ'), polozky: kosik.slice(), celkem: celkem(), jmeno: jmeno, email: email, poznamka: poznamka, stav: 'neodesláno (zkopírováno)' });
+    stav.textContent = '⚠ Přímé odeslání selhalo — objednávka je uložena. Zkopíruj ji tlačítkem níže a pošli mailem.';
     document.getElementById('oText').value = textObjednavky(jmeno, email, poznamka);
     document.getElementById('oFallback').style.display = 'block';
   }

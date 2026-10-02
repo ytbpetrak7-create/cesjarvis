@@ -69,7 +69,8 @@ const chat = document.getElementById('chat');
 const input = document.getElementById('in');
 const PAGE_EDICE = 'PRO';
 const RANK = { PRO: 1, MAX: 2, TEAM: 3, FIRMA: 4 };
-const SHEET_ID = '';
+const SHEET_ID = '1K5T_SGfE-krTwfAluVsXv8VqPRl5GaPT1S2vf8f3ezw';
+const SHEET_LIST = 'jarvis';
 const WEBAPP_URL = '';
 function klicOk(k) {
   const m = String(k || '').toUpperCase().trim().match(/^(PRO|MAX|TEAM|FIRMA)-[A-Z0-9]{6}-[A-Z0-9]{6}-[A-Z0-9]{6}$/);
@@ -77,7 +78,7 @@ function klicOk(k) {
 }
 async function overOnline(k) {
   if (!SHEET_ID) return null;
-  const r = await fetch('https://docs.google.com/spreadsheets/d/' + SHEET_ID + '/gviz/tq?tqx=out:json&headers=1');
+  const r = await fetch('https://docs.google.com/spreadsheets/d/' + SHEET_ID + '/gviz/tq?tqx=out:json&headers=1&sheet=' + encodeURIComponent(SHEET_LIST));
   const t = await r.text();
   const d = JSON.parse(t.substring(t.indexOf('{'), t.lastIndexOf('}') + 1));
   const rows = (d.table && d.table.rows) || [];

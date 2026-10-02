@@ -71,24 +71,44 @@ const chat = document.getElementById('chat');
 const input = document.getElementById('in');
 const PAGE_EDICE = 'MAX';
 const RANK = { PRO: 1, MAX: 2, TEAM: 3, FIRMA: 4 };
+const SHEET_ID = '';
 function klicOk(k) {
   const m = String(k || '').toUpperCase().trim().match(/^(PRO|MAX|TEAM|FIRMA)-[A-Z0-9]{6}-[A-Z0-9]{6}-[A-Z0-9]{6}$/);
   return m && RANK[m[1]] >= RANK[PAGE_EDICE] ? m[1] : null;
+}
+async function overOnline(k) {
+  if (!SHEET_ID) return null;
+  const r = await fetch('https://docs.google.com/spreadsheets/d/' + SHEET_ID + '/gviz/tq?tqx=out:json&headers=1');
+  const t = await r.text();
+  const d = JSON.parse(t.substring(t.indexOf('{'), t.lastIndexOf('}') + 1));
+  const rows = (d.table && d.table.rows) || [];
+  for (const row of rows) {
+    const c = (row.c || []).map(x => (x && x.v ? String(x.v) : '').trim());
+    if (c[0] && c[0].toUpperCase() === k.toUpperCase()) {
+      return { edice: (c[1] || '').toUpperCase(), aktivni: (c[3] || '').toLowerCase() === 'aktivni' };
+    }
+  }
+  return { nenalezen: true };
 }
 (function () {
   try {
     if (klicOk(localStorage.getItem('jarvis_klic'))) document.getElementById('lock').style.display = 'none';
   } catch (e) {}
 })();
-document.getElementById('odemkni').onclick = () => {
-  const ed = klicOk(document.getElementById('klic').value);
-  if (ed) {
-    try { localStorage.setItem('jarvis_klic', document.getElementById('klic').value.toUpperCase().trim()); } catch (e) {}
-    document.getElementById('lock').style.display = 'none';
-    add('jarvis', 'Odemčeno edicí ' + ed + '. Vítej!');
-  } else {
-    document.getElementById('lockMsg').textContent = 'Neplatný klíč pro edici MAX. Zkontroluj tvar.';
-  }
+document.getElementById('odemkni').onclick = async () => {
+  const k = document.getElementById('klic').value;
+  const ed = klicOk(k);
+  const msg = document.getElementById('lockMsg');
+  if (!ed) { msg.textContent = 'Neplatný klíč pro edici MAX. Zkontroluj tvar.'; return; }
+  msg.textContent = 'Ověřuji…';
+  try {
+    const on = await overOnline(k);
+    if (on && !on.nenalezen && !on.aktivni) { msg.textContent = 'Tento klíč byl deaktivován. Napiš nám.'; return; }
+    if (on && on.nenalezen) { msg.textContent = 'Klíč není v evidenci. Napiš nám.'; return; }
+  } catch (e) { msg.textContent = 'Ověření se nezdařilo (síť?) — zkouším místně…'; }
+  try { localStorage.setItem('jarvis_klic', k.toUpperCase().trim()); } catch (e) {}
+  document.getElementById('lock').style.display = 'none';
+  add('jarvis', 'Odemčeno edicí ' + ed + '. Vítej!');
 };
 function add(who, text) {
   const d = document.createElement('div');

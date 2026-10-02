@@ -3,12 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>J.A.R.V.I.S. — v prohlížeči</title>
+<title>J.A.R.V.I.S. Online — v prohlížeči</title>
 <style>
   :root { --bg:#0a0e17; --card:#121a2b; --accent:#00d4ff; --text:#e8edf5; --muted:#8b98ad; }
   * { margin:0; padding:0; box-sizing:border-box; }
   body { background:var(--bg); color:var(--text); font-family:'Segoe UI',Arial,sans-serif; display:flex; flex-direction:column; height:100vh; }
-  body.svetly { --bg:#f0f2f5; --card:#ffffff; --text:#1a2233; --muted:#5b6b82; }
   header { text-align:center; padding:20px; }
   header h1 { color:var(--accent); letter-spacing:4px; }
   header h1 .tag { font-size:.4em; vertical-align:middle; background:var(--accent); color:#04121a; padding:3px 10px; border-radius:6px; letter-spacing:1px; }
@@ -16,40 +15,26 @@
   #chat { flex:1; overflow-y:auto; max-width:800px; width:100%; margin:0 auto; padding:10px 20px; }
   .msg { margin:10px 0; padding:12px 16px; border-radius:10px; max-width:80%; }
   .me { background:#1e2c4a; margin-left:auto; }
-  body.svetly .me { background:#d6e6ff; }
   .jarvis { background:var(--card); border-left:4px solid var(--accent); }
   .jarvis b { color:var(--accent); }
-  #bar { display:flex; gap:10px; max-width:800px; width:100%; margin:0 auto; padding:10px 20px; }
+  #bar { display:flex; gap:10px; max-width:800px; width:100%; margin:0 auto; padding:10px 20px 25px; }
   #in { flex:1; padding:14px; border-radius:8px; border:1px solid #223; background:#000; color:var(--text); font-size:1em; }
-  body.svetly #in { background:#fff; }
   button { padding:14px 20px; border-radius:8px; border:none; font-weight:bold; cursor:pointer; font-size:1em; }
   #send { background:var(--accent); color:#04121a; }
   #mic { background:#1e2c4a; color:var(--text); }
   #mic.on { background:#c00; color:#fff; }
-  #dikt { background:#1e2c4a; color:var(--text); }
-  #panel { max-width:800px; width:100%; margin:0 auto; padding:0 20px 25px; display:none; }
-  #diktat { width:100%; height:100px; padding:12px; border-radius:8px; border:1px solid #223; background:#000; color:var(--text); font-size:1em; }
-  body.svetly #diktat { background:#fff; }
 </style>
 </head>
 <body>
 <header>
-  <h1>J.A.R.V.I.S.</h1>
+  <h1>J.A.R.V.I.S. <span class="tag">ONLINE</span></h1>
   <a href="index.html">← zpět na hlavní stránku</a>
 </header>
 <div id="chat"></div>
 <div id="bar">
-  <input id="in" placeholder="Napiš příkaz… (např. spočítej 12*8)" autocomplete="off">
+  <input id="in" placeholder="Napiš příkaz… (např. kolik je hodin)" autocomplete="off">
   <button id="mic" title="Hlasový vstup">🎙</button>
-  <button id="dikt" title="Diktování do textu">📝</button>
   <button id="send">Odeslat</button>
-</div>
-<div id="panel">
-  <textarea id="diktat" placeholder="Diktovaný text se objeví tady…"></textarea>
-  <div style="margin-top:8px;display:flex;gap:10px;">
-    <button id="kopir" style="background:#1e2c4a;color:var(--text);">📋 Kopírovat</button>
-    <button id="dstop" style="background:#1e2c4a;color:var(--text);">⏹ Stop diktování</button>
-  </div>
 </div>
 <script>
 const chat = document.getElementById('chat');
@@ -64,128 +49,60 @@ function add(who, text) {
 function speak(t) {
   try {
     speechSynthesis.cancel();
-    const u = new SpeechSynthesisUtterance(t.replace(/<[^>]+>/g, ''));
+    const u = new SpeechSynthesisUtterance(t);
     u.lang = 'cs-CZ';
     speechSynthesis.speak(u);
   } catch (e) {}
 }
-function esc(t) { return t.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
 const vtipy = [
   "Proč programátoři nemají rádi přírodu? Moc bugů.",
   "Kolik programátorů je potřeba na výměnu žárovky? Žádného, to je hardwarový problém.",
   "Proč Java vývojáři nosí brýle? Protože nevidí sharp.",
   "SQL dotaz vejde do baru a ptá se dvou tabulek: Můžu se přidat?"
 ];
-function getPozn() { try { return JSON.parse(localStorage.getItem('jarvis_poznamky') || '[]'); } catch (e) { return []; } }
-function setPozn(p) { localStorage.setItem('jarvis_poznamky', JSON.stringify(p)); }
-function smazPozn(i) { const p = getPozn(); p.splice(i, 1); setPozn(p); add('jarvis', 'Poznámka smazána. Zbývá jich ' + p.length + '.'); }
-function spocitej(s) {
-  let v = s.replace(/spočítej|spocitej|vypočítej|vypocitej|kolik je|=|\?/g, '').replace(/x/g, '*').replace(/,/g, '.').trim();
-  if (!/^[0-9+\-*/().\s]+$/.test(v) || !/[0-9]/.test(v)) return null;
-  try { const r = Function('"use strict";return(' + v + ')')(); return isFinite(r) ? Math.round(r * 100000) / 100000 : null; }
-  catch (e) { return null; }
-}
-function budik(s) {
-  const m = s.match(/za\s+(\d+)\s*(sekund|vteřin|minut|hodin)/);
-  if (!m) return "Řekni třeba: budík za 10 minut.";
-  const n = parseInt(m[1], 10);
-  const ms = /sekund|vteřin/.test(m[2]) ? n * 1000 : (/minut/.test(m[2]) ? n * 60000 : n * 3600000);
-  setTimeout(() => { add('jarvis', '⏰ Budík! Uplynulo ' + n + ' ' + m[2] + '.'); speak('Budík! Čas vypršel.'); }, ms);
-  return "Budík nastaven na " + n + " " + m[2] + ".";
-}
-function zaklad(s) {
-  if (/ahoj|čau|nazdar|zdravím|dobrý den/.test(s)) return "Zdravím! Systémy jsou online. Co potřebuješ?";
-  if (/kolik je hodin|kolik je čas|jaký je čas/.test(s) || s === 'kolik je') return "Je " + new Date().toLocaleTimeString('cs-CZ', { hour: '2-digit', minute: '2-digit' }) + ".";
-  if (/datum|den je|kolikátého/.test(s)) return "Dnes je " + new Date().toLocaleDateString('cs-CZ', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }) + ".";
-  if (/vtip|vtipko|zabav/.test(s)) return vtipy[Math.floor(Math.random() * vtipy.length)];
-  if (/otevři youtube|pust youtube/.test(s)) { window.open('https://youtube.com', '_blank'); return "Otevírám YouTube."; }
-  if (/otevři google|pust google/.test(s)) { window.open('https://google.com', '_blank'); return "Otevírám Google."; }
-  if (/otevři seznam/.test(s)) { window.open('https://seznam.cz', '_blank'); return "Otevírám Seznam."; }
-  if (/hledej|vyhledej|najdi|co je/.test(s)) {
-    const dotaz = s.replace(/hledej|vyhledej|najdi|mi|prosím|co je|co to je/g, '').trim();
-    if (dotaz) { window.open('https://www.google.com/search?q=' + encodeURIComponent(dotaz), '_blank'); return "Vyhledávám: " + esc(dotaz); }
-    return "Co mám vyhledat?";
-  }
-  if (/kdo jsi|co jsi/.test(s)) return "Jsem Jarvis v prohlížeči — kalkulačka, poznámky, budík i diktování, bez instalace.";
-  if (/co umíš|pomoc|help/.test(s)) return "Umím: čas, vtipy, weby, vyhledávání + spočítej příklad, poznámka + text, budík, diktování, světlý/tmavý režim.";
-  if (/díky|děkuji/.test(s)) return "Není zač!";
-  if (/nudím se/.test(s)) return "Můžu říct vtip, něco spočítat, nebo uložit poznámku. Co chceš?";
-  return null;
-}
 function odpovez(q) {
   const s = q.toLowerCase();
-  let r = null;
-  const vyp = (/spočítej|spocitej|vypočítej|vypocitej/.test(s)) ? spocitej(s) : null;
-  if (vyp !== null && (/spočítej|spocitej|vypočítej|vypocitej/.test(s))) r = "Výsledek: <b>" + vyp + "</b>";
-  else if (/poznamka|poznámka/.test(s) && !/ukaž|ukaž|vypiš|smaž/.test(s)) {
-    const t = q.replace(/přidej poznámku|pridej poznamku|poznámka|poznamka|:/gi, '').trim();
-    if (!t) r = "Co mám poznamenat? Řekni třeba: poznámka koupit mléko.";
-    else { const p = getPozn(); p.push(t); setPozn(p); r = "Poznamenáno. Máš " + p.length + " poznámek."; }
+  let r = "";
+  if (/ahoj|čau|nazdar|zdravím|dobrý den/.test(s)) r = "Zdravím! Systémy jsou online. Co potřebuješ?";
+  else if (/kolik je|hodin|čas/.test(s)) r = "Je " + new Date().toLocaleTimeString('cs-CZ', { hour: '2-digit', minute: '2-digit' }) + ".";
+  else if (/datum|den je|kolikátého/.test(s)) r = "Dnes je " + new Date().toLocaleDateString('cs-CZ', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }) + ".";
+  else if (/vtip|vtipko|zabav/.test(s)) r = vtipy[Math.floor(Math.random() * vtipy.length)];
+  else if (/otevři youtube|pust youtube/.test(s)) { r = "Otevírám YouTube."; window.open('https://youtube.com', '_blank'); }
+  else if (/otevři google|pust google/.test(s)) { r = "Otevírám Google."; window.open('https://google.com', '_blank'); }
+  else if (/otevři seznam/.test(s)) { r = "Otevírám Seznam."; window.open('https://seznam.cz', '_blank'); }
+  else if (/hledej|vyhledej|najdi|co je/.test(s)) {
+    const dotaz = s.replace(/hledej|vyhledej|najdi|mi|prosím|co je|co to je/g, '').trim();
+    if (dotaz) { r = "Vyhledávám: " + dotaz; window.open('https://www.google.com/search?q=' + encodeURIComponent(dotaz), '_blank'); }
+    else r = "Co mám vyhledat?";
   }
-  else if (/ukaž poznámky|ukaž poznamky|vypiš poznámky|ukaž poznamky/.test(s)) {
-    const p = getPozn();
-    r = p.length ? ("Tvoje poznámky:<br>" + p.map((t, i) => (i + 1) + ". " + esc(t) + ' <a href="#" onclick="smazPozn(' + i + ');return false;" style="color:#c66">✕</a>').join('<br>')) : "Zatím žádné poznámky nemáš.";
-  }
-  else if (/smaž poznámky|smaž poznamky|smaz poznamky/.test(s)) { setPozn([]); r = "Všechny poznámky smazány."; }
-  else if (/budík|budik/.test(s)) r = budik(s);
-  else if (/světlý režim|svetly rezim/.test(s)) { document.body.classList.add('svetly'); r = "Světlý režim zapnut."; }
-  else if (/tmavý režim|tmavy rezim/.test(s)) { document.body.classList.remove('svetly'); r = "Tmavý režim zapnut."; }
-  else if (/konec|nashledanou|čau pa/.test(s)) r = "Nashledanou! Prohlížečovou verzi máš vždycky po ruce.";
-  else r = zaklad(s);
-  if (!r) r = ["Hmm, zajímavé.", "Rozumím. Zkus třeba: spočítej 12 krát 8.", "Tohle online neumím — zkus poznámku, budík nebo výpočet."][Math.floor(Math.random() * 3)];
+  else if (/kdo jsi|co jsi/.test(s)) r = "Jsem Jarvis Online — běžím přímo v prohlížeči, bez instalace.";
+  else if (/co umíš|pomoc|help/.test(s)) r = "Umím: čas, datum, vtip, otevřít YouTube/Google/Seznam, vyhledávat. Vyšší edice umí víc!";
+  else if (/díky|děkuji/.test(s)) r = "Není zač!";
+  else if (/nudím se/.test(s)) r = "Můžu ti říct vtip, nebo něco vyhledat. Co chceš?";
+  else r = ["Hmm, zajímavé.", "Rozumím. Zkus třeba: kolik je hodin?", "Tohle online neumím — podívej se na vyšší edice!"][Math.floor(Math.random() * 3)];
   add('jarvis', r);
   speak(r);
 }
 document.getElementById('send').onclick = () => {
   if (!input.value.trim()) return;
-  add('me', esc(input.value));
+  add('me', input.value);
   odpovez(input.value);
   input.value = '';
 };
 input.onkeydown = e => { if (e.key === 'Enter') document.getElementById('send').click(); };
-// Hlas
 const mic = document.getElementById('mic');
 const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
 if (SR) {
   const rec = new SR();
   rec.lang = 'cs-CZ';
   mic.onclick = () => { rec.start(); mic.classList.add('on'); };
-  rec.onresult = e => { const t = e.results[0][0].transcript; mic.classList.remove('on'); add('me', esc(t)); odpovez(t); };
+  rec.onresult = e => { const t = e.results[0][0].transcript; mic.classList.remove('on'); add('me', t); odpovez(t); };
   rec.onend = () => mic.classList.remove('on');
   rec.onerror = () => mic.classList.remove('on');
 } else {
   mic.onclick = () => alert('Tvůj prohlížeč neumí hlasový vstup. Zkus Chrome.');
 }
-// Diktování
-let drec = null;
-document.getElementById('dikt').onclick = () => {
-  if (!SR) { alert('Tvůj prohlížeč neumí diktování. Zkus Chrome.'); return; }
-  if (drec) { drec.stop(); return; }
-  document.getElementById('panel').style.display = 'block';
-  drec = new SR();
-  drec.lang = 'cs-CZ';
-  drec.continuous = true;
-  drec.interimResults = true;
-  const box = document.getElementById('diktat');
-  drec.onresult = e => {
-    let fin = '';
-    for (let i = e.resultIndex; i < e.results.length; i++) {
-      if (e.results[i].isFinal) fin += e.results[i][0].transcript + ' ';
-    }
-    if (fin) box.value += fin;
-  };
-  drec.onend = () => { if (drec) { try { drec.start(); } catch (x) {} } };
-  try { drec.start(); add('jarvis', 'Diktuji do textového pole. Tlačítkem ⏹ zastavíš.'); } catch (e) {}
-};
-document.getElementById('dstop').onclick = () => { if (drec) { const d = drec; drec = null; d.onend = null; d.stop(); } };
-document.getElementById('kopir').onclick = () => {
-  const box = document.getElementById('diktat');
-  box.select();
-  try { document.execCommand('copy'); } catch (e) {}
-  if (navigator.clipboard) navigator.clipboard.writeText(box.value);
-  add('jarvis', 'Text zkopírován do schránky.');
-};
-add('jarvis', 'Jarvis online. Umím i kalkulačku, poznámky, budík a diktování. Zkus: spočítej 12 krát 8.');
+add('jarvis', 'ONLINE verze. Napiš příkaz nebo klikni na mikrofon a mluv česky.');
 </script>
 </body>
 </html>

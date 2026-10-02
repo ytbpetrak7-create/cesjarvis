@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>J.A.R.V.I.S. MAX — v prohlížeči</title>
+<style>
+  :root { --bg:#0a0e17; --card:#121a2b; --accent:#00d4ff; --text:#e8edf5; --muted:#8b98ad; }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:var(--bg); color:var(--text); font-family:'Segoe UI',Arial,sans-serif; display:flex; flex-direction:column; height:100vh; }
+  body.svetly { --bg:#f0f2f5; --card:#ffffff; --text:#1a2233; --muted:#5b6b82; }
+  header { text-align:center; padding:20px; }
+  header h1 { color:var(--accent); letter-spacing:4px; }
+  header h1 .tag { font-size:.4em; vertical-align:middle; background:var(--accent); color:#04121a; padding:3px 10px; border-radius:6px; letter-spacing:1px; }
+  header a { color:var(--muted); text-decoration:none; font-size:.9em; }
+  #chat { flex:1; overflow-y:auto; max-width:800px; width:100%; margin:0 auto; padding:10px 20px; }
+  .msg { margin:10px 0; padding:12px 16px; border-radius:10px; max-width:80%; }
+  .me { background:#1e2c4a; margin-left:auto; }
+  body.svetly .me { background:#d6e6ff; }
+  .jarvis { background:var(--card); border-left:4px solid var(--accent); }
+  .jarvis b { color:var(--accent); }
+  #bar { display:flex; gap:10px; max-width:800px; width:100%; margin:0 auto; padding:10px 20px; }
+  #in { flex:1; padding:14px; border-radius:8px; border:1px solid #223; background:#000; color:var(--text); font-size:1em; }
+  body.svetly #in { background:#fff; }
+  button { padding:14px 20px; border-radius:8px; border:none; font-weight:bold; cursor:pointer; font-size:1em; }
+  #send { background:var(--accent); color:#04121a; }
+  #mic { background:#1e2c4a; color:var(--text); }
+  #mic.on { background:#c00; color:#fff; }
+  #dikt { background:#1e2c4a; color:var(--text); }
+  #panel { max-width:800px; width:100%; margin:0 auto; padding:0 20px 25px; display:none; }
+  #diktat { width:100%; height:100px; padding:12px; border-radius:8px; border:1px solid #223; background:#000; color:var(--text); font-size:1em; }
+  body.svetly #diktat { background:#fff; }
+  pre { background:#000; padding:12px; border-radius:6px; overflow-x:auto; font-size:.8em; margin:8px 0; white-space:pre-wrap; }
+  .minibtn { padding:8px 14px; border-radius:6px; border:none; font-weight:bold; cursor:pointer; background:#1e2c4a; color:var(--text); font-size:.9em; margin-top:6px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>J.A.R.V.I.S. <span class="tag">MAX</span></h1>
+  <a href="index.html">← zpět na hlavní stránku</a>
+</header>
+<div id="chat"></div>
+<div id="bar">
+  <input id="in" placeholder="Napiš příkaz… (např. spočítej 12*8)" autocomplete="off">
+  <button id="mic" title="Hlasový vstup">🎙</button>
+  <button id="dikt" title="Diktování do textu">📝</button>
+  <button id="send">Odeslat</button>
+</div>
+<div id="panel">
+  <textarea id="diktat" placeholder="Diktovaný text se objeví tady…"></textarea>
+  <div style="margin-top:8px;display:flex;gap:10px;">
+    <button id="kopir" style="background:#1e2c4a;color:var(--text);">📋 Kopírovat</button>
+    <button id="dstop" style="background:#1e2c4a;color:var(--text);">⏹ Stop diktování</button>
+  </div>
+</div>
+<script>
+const chat = document.getElementById('chat');
+const input = document.getElementById('in');
+function add(who, text) {
+  const d = document.createElement('div');
+  d.className = 'msg ' + who;
+  d.innerHTML = (who === 'jarvis' ? '<b>Jarvis:</b> ' : '') + text;
+  chat.appendChild(d);
+  chat.scrollTop = chat.scrollHeight;
+}
+function speak(t) {
+  try {
+    speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(t.replace(/<[^>]+>/g, ''));
+    u.lang = 'cs-CZ';
+    speechSynthesis.speak(u);
+  } catch (e) {}
+}
+function esc(t) { return t.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+const vtipy = [
+  "Proč programátoři nemají rádi přírodu? Moc bugů.",
+  "Kolik programátorů je potřeba na výměnu žárovky? Žádného, to je hardwarový problém.",
+  "Proč Java vývojáři nosí brýle? Protože nevidí sharp.",
+  "SQL dotaz vejde do baru a ptá se dvou tabulek: Můžu se přidat?"
+];
+function getPozn() { try { return JSON.parse(localStorage.getItem('jarvis_poznamky') || '[]'); } catch (e) { return []; } }
+const GODOT = 'extends VehicleBody3D\n\n@export var max_speed := 200.0\n\nfunc _physics_process(_delta):\n    var fwd := Input.get_axis("ui_down", "ui_up")\n    engine_force = 500.0 * fwd\n    steering = Input.get_axis("ui_left", "ui_right") * 0.5\n    brake = 0.0 if fwd != 0 else 500.0\n    if velocity.length() > max_speed:\n        engine_force = 0.0';
+const tipy = [
+  "Pojmenovávej proměnné výstižně — za měsíc si poděkuješ.",
+  "Funkce má dělat jednu věc a dělat ji dobře.",
+  "Commituj často s výstižnými zprávami.",
+  "Duplicitní kód vyčleň do funkce.",
+  "Chyby vypisuj srozumitelně — i pro sebe za rok.",
+  "Nejdřív rozchoď jednoduchou verzi, pak vylepšuj.",
+  "Komentuj PROČ, ne CO — kód mluví sám.",
+  "Testuj okrajové případy: prázdný vstup, nula, maximum."
+];
+function kopirujGodot() {
+  if (navigator.clipboard) navigator.clipboard.writeText(GODOT);
+  add('jarvis', 'GDScript zkopírován. Vlož ho Ctrl+V do .gd souboru v Godotu.');
+}
+function htmlPrezentace(tema) {
+  const e = esc(tema);
+  const html = '<!DOCTYPE html><html lang="cs"><head><meta charset="UTF-8"><title>' + e + '</title></head><body style="font-family:Arial;background:#0a0e17;color:#fff;margin:0;">'
+    + ['<h1>' + e + '</h1><p>Prezentace vytvořená Jarvisem MAX</p>',
+       '<h1>Úvod</h1><ul><li>Co je: ' + e + '</li><li>Proč je to důležité</li></ul>',
+       '<h1>Hlavní část</h1><ul><li>Základní informace</li><li>Příklady z praxe</li><li>Tipy</li></ul>',
+       '<h1>Závěr</h1><ul><li>Shrnutí</li><li>Děkuji za pozornost!</li></ul>']
+      .map(s => '<section style="min-height:90vh;padding:60px;border-bottom:2px solid #00d4ff;">' + s + '</section>').join('')
+    + '</body></html>';
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([html], { type: 'text/html' }));
+  a.download = 'prezentace.html';
+  a.click();
+}
+function setPozn(p) { localStorage.setItem('jarvis_poznamky', JSON.stringify(p)); }
+function smazPozn(i) { const p = getPozn(); p.splice(i, 1); setPozn(p); add('jarvis', 'Poznámka smazána. Zbývá jich ' + p.length + '.'); }
+function spocitej(s) {
+  let v = s.replace(/spočítej|spocitej|vypočítej|vypocitej|kolik je|=|\?/g, '').replace(/x/g, '*').replace(/,/g, '.').trim();
+  if (!/^[0-9+\-*/().\s]+$/.test(v) || !/[0-9]/.test(v)) return null;
+  try { const r = Function('"use strict";return(' + v + ')')(); return isFinite(r) ? Math.round(r * 100000) / 100000 : null; }
+  catch (e) { return null; }
+}
+function budik(s) {
+  const m = s.match(/za\s+(\d+)\s*(sekund|vteřin|minut|hodin)/);
+  if (!m) return "Řekni třeba: budík za 10 minut.";
+  const n = parseInt(m[1], 10);
+  const ms = /sekund|vteřin/.test(m[2]) ? n * 1000 : (/minut/.test(m[2]) ? n * 60000 : n * 3600000);
+  setTimeout(() => { add('jarvis', '⏰ Budík! Uplynulo ' + n + ' ' + m[2] + '.'); speak('Budík! Čas vypršel.'); }, ms);
+  return "Budík nastaven na " + n + " " + m[2] + ".";
+}
+function zaklad(s) {
+  if (/ahoj|čau|nazdar|zdravím|dobrý den/.test(s)) return "Zdravím! Systémy jsou online. Co potřebuješ?";
+  if (/kolik je hodin|kolik je čas|jaký je čas/.test(s) || s === 'kolik je') return "Je " + new Date().toLocaleTimeString('cs-CZ', { hour: '2-digit', minute: '2-digit' }) + ".";
+  if (/datum|den je|kolikátého/.test(s)) return "Dnes je " + new Date().toLocaleDateString('cs-CZ', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }) + ".";
+  if (/vtip|vtipko|zabav/.test(s)) return vtipy[Math.floor(Math.random() * vtipy.length)];
+  if (/otevři youtube|pust youtube/.test(s)) { window.open('https://youtube.com', '_blank'); return "Otevírám YouTube."; }
+  if (/otevři google|pust google/.test(s)) { window.open('https://google.com', '_blank'); return "Otevírám Google."; }
+  if (/otevři seznam/.test(s)) { window.open('https://seznam.cz', '_blank'); return "Otevírám Seznam."; }
+  if (/hledej|vyhledej|najdi|co je/.test(s)) {
+    const dotaz = s.replace(/hledej|vyhledej|najdi|mi|prosím|co je|co to je/g, '').trim();
+    if (dotaz) { window.open('https://www.google.com/search?q=' + encodeURIComponent(dotaz), '_blank'); return "Vyhledávám: " + esc(dotaz); }
+    return "Co mám vyhledat?";
+  }
+  if (/kdo jsi|co jsi/.test(s)) return "Jsem Jarvis MAX v prohlížeči — vše z PRO plus Godot kód, HTML prezentace a tipy.";
+  if (/co umíš|pomoc|help/.test(s)) return "MAX umí vše z PRO + godot auto, html prezentace o + téma, tip na kód.";
+  if (/díky|děkuji/.test(s)) return "Není zač!";
+  if (/nudím se/.test(s)) return "Můžu říct vtip, něco spočítat, nebo uložit poznámku. Co chceš?";
+  return null;
+}
+function odpovez(q) {
+  const s = q.toLowerCase();
+  let r = null;
+  const vyp = (/spočítej|spocitej|vypočítej|vypocitej/.test(s)) ? spocitej(s) : null;
+  if (vyp !== null && (/spočítej|spocitej|vypočítej|vypocitej/.test(s))) r = "Výsledek: <b>" + vyp + "</b>";
+  else if (/poznamka|poznámka/.test(s) && !/ukaž|ukaž|vypiš|smaž/.test(s)) {
+    const t = q.replace(/přidej poznámku|pridej poznamku|poznámka|poznamka|:/gi, '').trim();
+    if (!t) r = "Co mám poznamenat? Řekni třeba: poznámka koupit mléko.";
+    else { const p = getPozn(); p.push(t); setPozn(p); r = "Poznamenáno. Máš " + p.length + " poznámek."; }
+  }
+  else if (/ukaž poznámky|ukaž poznamky|vypiš poznámky|ukaž poznamky/.test(s)) {
+    const p = getPozn();
+    r = p.length ? ("Tvoje poznámky:<br>" + p.map((t, i) => (i + 1) + ". " + esc(t) + ' <a href="#" onclick="smazPozn(' + i + ');return false;" style="color:#c66">✕</a>').join('<br>')) : "Zatím žádné poznámky nemáš.";
+  }
+  else if (/smaž poznámky|smaž poznamky|smaz poznamky/.test(s)) { setPozn([]); r = "Všechny poznámky smazány."; }
+  else if (/budík|budik/.test(s)) r = budik(s);
+  else if (/světlý režim|svetly rezim/.test(s)) { document.body.classList.add('svetly'); r = "Světlý režim zapnut."; }
+  else if (/tmavý režim|tmavy rezim/.test(s)) { document.body.classList.remove('svetly'); r = "Tmavý režim zapnut."; }
+  else if (/godot auto|auto v godotu|jezdící auto|jezdici auto/.test(s)) {
+    r = 'GDScript pro jezdící auto (VehicleBody3D, šipky/WASD):<br><pre>' + esc(GODOT) + '</pre><button class="minibtn" onclick="kopirujGodot()">📋 Kopírovat</button>';
+  }
+  else if (/html prezentace|prezentace o/.test(s)) {
+    const tema = q.replace(/vytvoř|vytvor|html prezentaci|html prezentace|prezentaci|prezentace|prosím|prosim|mi|o/gi, '').trim() || 'Moje prezentace';
+    htmlPrezentace(tema);
+    r = 'HTML prezentace o tématu <b>' + esc(tema) + '</b> se stahuje. Otevři soubor v prohlížeči.';
+  }
+  else if (/tip na|porad|doporuč|tip pro/.test(s)) r = '💡 Tip: ' + tipy[Math.floor(Math.random() * tipy.length)];
+  else if (/konec|nashledanou|čau pa/.test(s)) r = "Nashledanou! Prohlížečovou verzi máš vždycky po ruce.";
+  else r = zaklad(s);
+  if (!r) r = ["Hmm, zajímavé.", "Rozumím. Zkus třeba: spočítej 12 krát 8.", "Tohle online neumím — zkus poznámku, budík nebo výpočet."][Math.floor(Math.random() * 3)];
+  add('jarvis', r);
+  speak(r);
+}
+document.getElementById('send').onclick = () => {
+  if (!input.value.trim()) return;
+  add('me', esc(input.value));
+  odpovez(input.value);
+  input.value = '';
+};
+input.onkeydown = e => { if (e.key === 'Enter') document.getElementById('send').click(); };
+// Hlas
+const mic = document.getElementById('mic');
+const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+if (SR) {
+  const rec = new SR();
+  rec.lang = 'cs-CZ';
+  mic.onclick = () => { rec.start(); mic.classList.add('on'); };
+  rec.onresult = e => { const t = e.results[0][0].transcript; mic.classList.remove('on'); add('me', esc(t)); odpovez(t); };
+  rec.onend = () => mic.classList.remove('on');
+  rec.onerror = () => mic.classList.remove('on');
+} else {
+  mic.onclick = () => alert('Tvůj prohlížeč neumí hlasový vstup. Zkus Chrome.');
+}
+// Diktování
+let drec = null;
+document.getElementById('dikt').onclick = () => {
+  if (!SR) { alert('Tvůj prohlížeč neumí diktování. Zkus Chrome.'); return; }
+  if (drec) { drec.stop(); return; }
+  document.getElementById('panel').style.display = 'block';
+  drec = new SR();
+  drec.lang = 'cs-CZ';
+  drec.continuous = true;
+  drec.interimResults = true;
+  const box = document.getElementById('diktat');
+  drec.onresult = e => {
+    let fin = '';
+    for (let i = e.resultIndex; i < e.results.length; i++) {
+      if (e.results[i].isFinal) fin += e.results[i][0].transcript + ' ';
+    }
+    if (fin) box.value += fin;
+  };
+  drec.onend = () => { if (drec) { try { drec.start(); } catch (x) {} } };
+  try { drec.start(); add('jarvis', 'Diktuji do textového pole. Tlačítkem ⏹ zastavíš.'); } catch (e) {}
+};
+document.getElementById('dstop').onclick = () => { if (drec) { const d = drec; drec = null; d.onend = null; d.stop(); } };
+document.getElementById('kopir').onclick = () => {
+  const box = document.getElementById('diktat');
+  box.select();
+  try { document.execCommand('copy'); } catch (e) {}
+  if (navigator.clipboard) navigator.clipboard.writeText(box.value);
+  add('jarvis', 'Text zkopírován do schránky.');
+};
+add('jarvis', 'MAX verze online. Navíc umím Godot kód, HTML prezentace a tipy. Zkus: godot auto.');
+</script>
+</body>
+</html>

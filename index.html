@@ -246,7 +246,7 @@
 <script>
 const CENY = { PRO: 199, MAX: 499, TEAM: 999 };
 const ORDER_EMAIL = 'objednavky@jarvis.cz';
-const ADMIN_EMAIL = 'admin@jarvis.cz';
+const ADMIN_EMAILY = ['ytbpetrak7@gmail.com', 'alaalach7@gmail.com', 'petrakpetrak1212@gmail.com'];
 let kosik = JSON.parse(localStorage.getItem('jarvis_kosik') || '[]');
 let uzivatel = JSON.parse(localStorage.getItem('jarvis_uzivatel') || 'null');
 function uloz() { localStorage.setItem('jarvis_kosik', JSON.stringify(kosik)); vykresli(); }
@@ -262,7 +262,7 @@ function vykresli() {
   });
   document.querySelector('#soucet b').textContent = celkem() + ' Kč';
   document.getElementById('loginBtn').textContent = uzivatel ? ('👤 ' + uzivatel.jmeno) : '👤 Přihlásit';
-  const jeAdmin = uzivatel && uzivatel.email && uzivatel.email.toLowerCase() === ADMIN_EMAIL;
+  const jeAdmin = uzivatel && uzivatel.email && ADMIN_EMAILY.includes(uzivatel.email.toLowerCase().trim());
   document.getElementById('adminBtn').style.display = jeAdmin ? '' : 'none';
 }
 function getObj() { try { return JSON.parse(localStorage.getItem('jarvis_objednavky') || '[]'); } catch (e) { return []; } }

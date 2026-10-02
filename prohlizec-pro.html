@@ -30,6 +30,10 @@
   #panel { max-width:800px; width:100%; margin:0 auto; padding:0 20px 25px; display:none; }
   #diktat { width:100%; height:100px; padding:12px; border-radius:8px; border:1px solid #223; background:#000; color:var(--text); font-size:1em; }
   body.svetly #diktat { background:#fff; }
+  #lock { position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(4,8,16,.96); z-index:500; display:flex; align-items:center; justify-content:center; }
+  #lockBox { background:var(--card); padding:30px; border-radius:12px; border:1px solid var(--accent); max-width:380px; text-align:center; }
+  #lockBox input { width:100%; padding:12px; margin:10px 0; border-radius:6px; border:1px solid #223; background:#000; color:var(--text); font-size:1em; text-transform:uppercase; }
+  #lockMsg { color:#c66; min-height:1.4em; font-size:.95em; }
 </style>
 </head>
 <body>
@@ -37,6 +41,15 @@
   <h1>J.A.R.V.I.S. <span class="tag">PRO</span></h1>
   <a href="index.html">← zpět na hlavní stránku</a>
 </header>
+<div id="lock">
+  <div id="lockBox">
+    <h2 style="color:var(--accent);">🔒 PRO verze</h2>
+    <p style="color:var(--muted);">Zadej licenční klíč z e-mailu po zakoupení.</p>
+    <input id="klic" placeholder="PRO-XXXXXX-XXXXXX-XXXXXX">
+    <p id="lockMsg"></p>
+    <button id="odemkni" style="background:var(--accent);color:#04121a;width:100%;">Odemknout</button>
+  </div>
+</div>
 <div id="chat"></div>
 <div id="bar">
   <input id="in" placeholder="Napiš příkaz… (např. spočítej 12*8)" autocomplete="off">
@@ -54,6 +67,27 @@
 <script>
 const chat = document.getElementById('chat');
 const input = document.getElementById('in');
+const PAGE_EDICE = 'PRO';
+const RANK = { PRO: 1, MAX: 2, TEAM: 3, FIRMA: 4 };
+function klicOk(k) {
+  const m = String(k || '').toUpperCase().trim().match(/^(PRO|MAX|TEAM|FIRMA)-[A-Z0-9]{6}-[A-Z0-9]{6}-[A-Z0-9]{6}$/);
+  return m && RANK[m[1]] >= RANK[PAGE_EDICE] ? m[1] : null;
+}
+(function () {
+  try {
+    if (klicOk(localStorage.getItem('jarvis_klic'))) document.getElementById('lock').style.display = 'none';
+  } catch (e) {}
+})();
+document.getElementById('odemkni').onclick = () => {
+  const ed = klicOk(document.getElementById('klic').value);
+  if (ed) {
+    try { localStorage.setItem('jarvis_klic', document.getElementById('klic').value.toUpperCase().trim()); } catch (e) {}
+    document.getElementById('lock').style.display = 'none';
+    add('jarvis', 'Odemčeno edicí ' + ed + '. Vítej!');
+  } else {
+    document.getElementById('lockMsg').textContent = 'Neplatný klíč pro edici PRO. Zkontroluj tvar.';
+  }
+};
 function add(who, text) {
   const d = document.createElement('div');
   d.className = 'msg ' + who;

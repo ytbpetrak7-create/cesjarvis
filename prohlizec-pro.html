@@ -70,6 +70,7 @@ const input = document.getElementById('in');
 const PAGE_EDICE = 'PRO';
 const RANK = { PRO: 1, MAX: 2, TEAM: 3, FIRMA: 4 };
 const SHEET_ID = '';
+const WEBAPP_URL = '';
 function klicOk(k) {
   const m = String(k || '').toUpperCase().trim().match(/^(PRO|MAX|TEAM|FIRMA)-[A-Z0-9]{6}-[A-Z0-9]{6}-[A-Z0-9]{6}$/);
   return m && RANK[m[1]] >= RANK[PAGE_EDICE] ? m[1] : null;
@@ -105,6 +106,7 @@ document.getElementById('odemkni').onclick = async () => {
     if (on && on.nenalezen) { msg.textContent = 'Klíč není v evidenci. Napiš nám.'; return; }
   } catch (e) { msg.textContent = 'Ověření se nezdařilo (síť?) — zkouším místně…'; }
   try { localStorage.setItem('jarvis_klic', k.toUpperCase().trim()); } catch (e) {}
+  try { if (WEBAPP_URL) fetch(WEBAPP_URL + '?akce=pouzit&klic=' + encodeURIComponent(k)); } catch (e) {}
   document.getElementById('lock').style.display = 'none';
   add('jarvis', 'Odemčeno edicí ' + ed + '. Vítej!');
 };

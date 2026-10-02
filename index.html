@@ -200,6 +200,24 @@
   <button class="kbtn sec" onclick="zavriKosik()">Zavřít</button>
 </div>
 
+<div id="objModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.7);z-index:300;">
+  <div style="background:var(--card);max-width:420px;margin:10% auto;padding:25px;border-radius:12px;border:1px solid var(--accent);">
+    <h3 style="color:var(--accent);margin-bottom:10px;">📦 Dokončit objednávku</h3>
+    <p id="oSouhrn" style="color:var(--muted);font-size:.95em;"></p>
+    <input id="oJmeno" placeholder="Jméno *" style="width:100%;padding:12px;margin:8px 0;border-radius:6px;border:1px solid #223;background:#000;color:var(--text);font-size:1em;">
+    <input id="oEmail" placeholder="E-mail" style="width:100%;padding:12px;margin:8px 0;border-radius:6px;border:1px solid #223;background:#000;color:var(--text);font-size:1em;">
+    <input id="oPozn" placeholder="Poznámka (nepovinné)" style="width:100%;padding:12px;margin:8px 0;border-radius:6px;border:1px solid #223;background:#000;color:var(--text);font-size:1em;">
+    <p id="oStav" style="min-height:1.4em;font-size:.95em;"></p>
+    <div id="oFallback" style="display:none;">
+      <textarea id="oText" style="width:100%;height:110px;padding:10px;border-radius:6px;border:1px solid #223;background:#000;color:var(--text);"></textarea>
+      <button class="kbtn sec" style="display:block;width:100%;margin-top:8px;padding:12px;border-radius:6px;border:none;font-weight:bold;cursor:pointer;background:#1e2c4a;color:var(--text);" onclick="kopirujObj()">📋 Kopírovat objednávku</button>
+    </div>
+    <button class="kbtn" onclick="odeslatForm()">Odeslat objednávku</button>
+    <button class="kbtn sec" style="display:block;width:100%;margin-top:10px;padding:12px;border-radius:6px;border:none;font-weight:bold;cursor:pointer;background:#1e2c4a;color:var(--text);" onclick="mailemOtevrit()">Otevřít v e-mailu</button>
+    <button class="kbtn sec" style="display:block;width:100%;margin-top:10px;padding:12px;border-radius:6px;border:none;font-weight:bold;cursor:pointer;background:#1e2c4a;color:var(--text);" onclick="zavriObj()">Zavřít</button>
+  </div>
+</div>
+
 <div id="modal">
   <div id="modalBox">
     <h3 style="color:var(--accent);margin-bottom:10px;">👤 Přihlášení (nepovinné)</h3>
@@ -213,6 +231,7 @@
 
 <script>
 const CENY = { PRO: 199, MAX: 499, TEAM: 999 };
+const ORDER_EMAIL = 'objednavky@jarvis.cz';
 let kosik = JSON.parse(localStorage.getItem('jarvis_kosik') || '[]');
 let uzivatel = JSON.parse(localStorage.getItem('jarvis_uzivatel') || 'null');
 function uloz() { localStorage.setItem('jarvis_kosik', JSON.stringify(kosik)); vykresli(); }
@@ -231,12 +250,63 @@ function vykresli() {
 }
 function otevriKosik() { vykresli(); document.getElementById('drawer').classList.add('open'); }
 function zavriKosik() { document.getElementById('drawer').classList.remove('open'); }
+function textObjednavky(jmeno, email, poznamka) {
+  let t = 'Objednávka J.A.R.V.I.S.\n\n' + kosik.map(e => '- ' + e + ' (' + CENY[e] + ' Kč)').join('\n');
+  t += '\nCelkem: ' + celkem() + ' Kč';
+  if (jmeno) t += '\nJméno: ' + jmeno;
+  if (email) t += '\nE-mail: ' + email;
+  if (poznamka) t += '\nPoznámka: ' + poznamka;
+  return t;
+}
 function odeslat() {
   if (!kosik.length) { alert('Košík je prázdný.'); return; }
-  let telo = 'Objednávka J.A.R.V.I.S.%0D%0A%0D%0A' + kosik.map(e => '- ' + e + ' (' + CENY[e] + ' Kč)').join('%0D%0A');
-  telo += '%0D%0ACelkem: ' + celkem() + ' Kč';
-  if (uzivatel) telo += '%0D%0AJméno: ' + encodeURIComponent(uzivatel.jmeno) + '%0D%0AE-mail: ' + encodeURIComponent(uzivatel.email);
-  location.href = 'mailto:objednavky@jarvis.cz?subject=Objednávka JARVIS&body=' + telo;
+  zavriKosik();
+  document.getElementById('oJmeno').value = uzivatel ? uzivatel.jmeno : '';
+  document.getElementById('oEmail').value = uzivatel && uzivatel.email ? uzivatel.email : '';
+  document.getElementById('oSouhrn').textContent = kosik.map(e => e + ' (' + CENY[e] + ' Kč)').join(', ') + ' — celkem ' + celkem() + ' Kč';
+  document.getElementById('oStav').textContent = '';
+  document.getElementById('oFallback').style.display = 'none';
+  document.getElementById('objModal').style.display = 'block';
+}
+function zavriObj() { document.getElementById('objModal').style.display = 'none'; }
+async function odeslatForm() {
+  const jmeno = document.getElementById('oJmeno').value.trim();
+  const email = document.getElementById('oEmail').value.trim();
+  const poznamka = document.getElementById('oPozn').value.trim();
+  const stav = document.getElementById('oStav');
+  if (!jmeno) { stav.textContent = 'Zadej aspoň jméno.'; return; }
+  stav.textContent = 'Odesílám…';
+  try {
+    const r = await fetch('https://formsubmit.co/ajax/' + ORDER_EMAIL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+      body: JSON.stringify({ jméno: jmeno, email: email, zpráva: textObjednavky(jmeno, email, poznamka) })
+    });
+    const d = await r.json();
+    if (d.success) {
+      stav.textContent = '✅ Objednávka odeslána! Ozveme se na ' + (email || 'tvůj e-mail') + '.';
+      kosik = []; uloz();
+      return;
+    }
+    throw 0;
+  } catch (e) {
+    stav.textContent = '⚠ Přímé odeslání selhalo — zkopíruj objednávku tlačítkem níže a pošli ji mailem.';
+    document.getElementById('oText').value = textObjednavky(jmeno, email, poznamka);
+    document.getElementById('oFallback').style.display = 'block';
+  }
+}
+function kopirujObj() {
+  const t = document.getElementById('oText');
+  t.select();
+  try { document.execCommand('copy'); } catch (e) {}
+  if (navigator.clipboard) navigator.clipboard.writeText(t.value);
+  document.getElementById('oStav').textContent = '✅ Zkopírováno. Pošli to na ' + ORDER_EMAIL;
+}
+function mailemOtevrit() {
+  const jmeno = document.getElementById('oJmeno').value.trim();
+  const email = document.getElementById('oEmail').value.trim();
+  const poznamka = document.getElementById('oPozn').value.trim();
+  location.href = 'mailto:' + ORDER_EMAIL + '?subject=Objednávka JARVIS&body=' + encodeURIComponent(textObjednavky(jmeno, email, poznamka));
 }
 function otevriLogin() {
   if (uzivatel && confirm('Jsi přihlášen jako ' + uzivatel.jmeno + '. Odhlásit?')) {

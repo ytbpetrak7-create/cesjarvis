@@ -31,9 +31,31 @@
   .req { background:var(--card); border-radius:10px; padding:25px; }
   .req code { display:block; background:#000; padding:12px; border-radius:6px; margin:10px 0; color:var(--accent); overflow-x:auto; }
   footer { text-align:center; padding:30px; color:var(--muted); border-top:1px solid #1c2740; }
+  #topbar { position:fixed; top:0; right:0; padding:10px 15px; z-index:100; display:flex; gap:10px; }
+  #topbar button { padding:8px 16px; border-radius:6px; border:1px solid var(--accent); background:#0a0e17; color:var(--text); cursor:pointer; font-size:.9em; }
+  #topbar button:hover { background:#1e2c4a; }
+  #kosikBtn b { color:var(--accent); }
+  #drawer { position:fixed; top:0; right:-350px; width:320px; height:100%; background:var(--card); border-left:1px solid #223; z-index:200; transition:.3s; padding:20px; overflow-y:auto; }
+  #drawer.open { right:0; }
+  #drawer h3 { color:var(--accent); margin-bottom:15px; }
+  .kpol { display:flex; justify-content:space-between; align-items:center; padding:10px 0; border-bottom:1px solid #1c2740; }
+  .kpol button { background:none; border:none; color:#c66; cursor:pointer; font-size:1.1em; }
+  #soucet { font-size:1.2em; margin:15px 0; font-weight:bold; }
+  #soucet b { color:var(--accent); }
+  .kbtn { display:block; width:100%; margin-top:10px; padding:12px; border-radius:6px; border:none; font-weight:bold; cursor:pointer; background:var(--accent); color:#04121a; font-size:1em; }
+  .kbtn.sec { background:#1e2c4a; color:var(--text); }
+  #modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,.7); z-index:300; }
+  #modalBox { background:var(--card); max-width:350px; margin:15% auto; padding:25px; border-radius:12px; border:1px solid var(--accent); }
+  #modalBox input { width:100%; padding:12px; margin:8px 0; border-radius:6px; border:1px solid #223; background:#000; color:var(--text); font-size:1em; }
+  .doKosiku { cursor:pointer; border:none; font-size:1em; }
 </style>
 </head>
 <body>
+
+<div id="topbar">
+  <button id="loginBtn" onclick="otevriLogin()">👤 Přihlásit</button>
+  <button id="kosikBtn" onclick="otevriKosik()">🛒 Košík (<b id="pocet">0</b>)</button>
+</div>
 
 <header>
   <h1>J.A.R.V.I.S.</h1>
@@ -80,8 +102,9 @@
         <li>Kódovací pomoc</li>
         <li>Učení vlastních příkazů</li>
         <li>Monitoring + proaktivní chat</li>
+        <li>🌐 Prohlížečová verze v ceně</li>
       </ul>
-      <a href="mailto:objednavky@jarvis.cz?subject=JARVIS%20PRO">Objednat</a><br>
+      <button class="doKosiku" style="padding:10px 25px;border-radius:6px;font-weight:bold;background:var(--accent);color:#04121a;" onclick="pridej('PRO')">🛒 Do košíku</button><br>
       <a href="updates-pro.html" style="background:none;color:var(--muted);font-weight:normal;font-size:.9em;">📝 Aktualizace</a>
     </div>
     <div class="plan">
@@ -93,8 +116,9 @@
         <li>PowerPoint prezentace</li>
         <li>VS Code tipy, web test</li>
         <li>Rozpoznávání kamerou</li>
+        <li>🌐 Prohlížečová verze v ceně</li>
       </ul>
-      <a href="mailto:objednavky@jarvis.cz?subject=JARVIS%20MAX">Objednat</a><br>
+      <button class="doKosiku" style="padding:10px 25px;border-radius:6px;font-weight:bold;background:#1e2c4a;color:var(--text);" onclick="pridej('MAX')">🛒 Do košíku</button><br>
       <a href="updates-max.html" style="background:none;color:var(--muted);font-weight:normal;font-size:.9em;">📝 Aktualizace</a>
     </div>
     <div class="plan">
@@ -106,8 +130,9 @@
         <li>Sdílené příkazy mezi PC</li>
         <li>Společná paměť</li>
         <li>Podpora</li>
+        <li>🌐 Prohlížečová verze v ceně</li>
       </ul>
-      <a href="mailto:objednavky@jarvis.cz?subject=JARVIS%20TEAM">Objednat</a><br>
+      <button class="doKosiku" style="padding:10px 25px;border-radius:6px;font-weight:bold;background:#1e2c4a;color:var(--text);" onclick="pridej('TEAM')">🛒 Do košíku</button><br>
       <a href="updates-team.html" style="background:none;color:var(--muted);font-weight:normal;font-size:.9em;">📝 Aktualizace</a>
     </div>
     <div class="plan" style="opacity:.65;">
@@ -165,6 +190,71 @@
 <footer>
   J.A.R.V.I.S. • Vytvořil Petrak7 • Systémy jsou online
 </footer>
+
+<div id="drawer">
+  <h3>🛒 Košík</h3>
+  <div id="polozky"></div>
+  <div id="soucet">Celkem: <b>0 Kč</b></div>
+  <button class="kbtn" onclick="odeslat()">Odeslat objednávku</button>
+  <button class="kbtn sec" onclick="zavriKosik()">Zavřít</button>
+</div>
+
+<div id="modal">
+  <div id="modalBox">
+    <h3 style="color:var(--accent);margin-bottom:10px;">👤 Přihlášení (nepovinné)</h3>
+    <p style="color:var(--muted);font-size:.9em;">Bez přihlášení jde vše objednat. Jméno se použije v objednávce.</p>
+    <input id="jmeno" placeholder="Jméno">
+    <input id="email" placeholder="E-mail">
+    <button class="kbtn" onclick="ulozPrihlaseni()">Uložit</button>
+    <button class="kbtn sec" onclick="zavriLogin()">Zavřít</button>
+  </div>
+</div>
+
+<script>
+const CENY = { PRO: 199, MAX: 499, TEAM: 999 };
+let kosik = JSON.parse(localStorage.getItem('jarvis_kosik') || '[]');
+let uzivatel = JSON.parse(localStorage.getItem('jarvis_uzivatel') || 'null');
+function uloz() { localStorage.setItem('jarvis_kosik', JSON.stringify(kosik)); vykresli(); }
+function pridej(e) { if (!kosik.includes(e)) { kosik.push(e); uloz(); } otevriKosik(); }
+function odeber(e) { kosik = kosik.filter(x => x !== e); uloz(); }
+function celkem() { return kosik.reduce((s, e) => s + (CENY[e] || 0), 0); }
+function vykresli() {
+  document.getElementById('pocet').textContent = kosik.length;
+  const box = document.getElementById('polozky');
+  box.innerHTML = kosik.length ? '' : '<p style="color:var(--muted)">Košík je prázdný.</p>';
+  kosik.forEach(e => {
+    box.innerHTML += '<div class="kpol"><span>' + e + ' — ' + CENY[e] + ' Kč</span><button onclick="odeber(\'' + e + '\')">✕</button></div>';
+  });
+  document.querySelector('#soucet b').textContent = celkem() + ' Kč';
+  document.getElementById('loginBtn').textContent = uzivatel ? ('👤 ' + uzivatel.jmeno) : '👤 Přihlásit';
+}
+function otevriKosik() { vykresli(); document.getElementById('drawer').classList.add('open'); }
+function zavriKosik() { document.getElementById('drawer').classList.remove('open'); }
+function odeslat() {
+  if (!kosik.length) { alert('Košík je prázdný.'); return; }
+  let telo = 'Objednávka J.A.R.V.I.S.%0D%0A%0D%0A' + kosik.map(e => '- ' + e + ' (' + CENY[e] + ' Kč)').join('%0D%0A');
+  telo += '%0D%0ACelkem: ' + celkem() + ' Kč';
+  if (uzivatel) telo += '%0D%0AJméno: ' + encodeURIComponent(uzivatel.jmeno) + '%0D%0AE-mail: ' + encodeURIComponent(uzivatel.email);
+  location.href = 'mailto:objednavky@jarvis.cz?subject=Objednávka JARVIS&body=' + telo;
+}
+function otevriLogin() {
+  if (uzivatel && confirm('Jsi přihlášen jako ' + uzivatel.jmeno + '. Odhlásit?')) {
+    uzivatel = null; localStorage.removeItem('jarvis_uzivatel'); vykresli(); return;
+  }
+  if (uzivatel) return;
+  document.getElementById('modal').style.display = 'block';
+}
+function zavriLogin() { document.getElementById('modal').style.display = 'none'; }
+function ulozPrihlaseni() {
+  const j = document.getElementById('jmeno').value.trim();
+  const e = document.getElementById('email').value.trim();
+  if (!j) { alert('Zadej aspoň jméno.'); return; }
+  uzivatel = { jmeno: j, email: e };
+  localStorage.setItem('jarvis_uzivatel', JSON.stringify(uzivatel));
+  zavriLogin(); vykresli();
+}
+vykresli();
+</script>
 
 </body>
 </html>

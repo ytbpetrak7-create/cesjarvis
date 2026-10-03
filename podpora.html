@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>J.A.R.V.I.S. — AI podpora</title>
+<style>
+  :root { --bg:#0a0e17; --card:#121a2b; --accent:#00d4ff; --text:#e8edf5; --muted:#8b98ad; }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:var(--bg); color:var(--text); font-family:'Segoe UI',Arial,sans-serif; display:flex; flex-direction:column; height:100vh; }
+  header { text-align:center; padding:20px; }
+  header h1 { color:var(--accent); letter-spacing:3px; font-size:1.5em; }
+  header a { color:var(--muted); text-decoration:none; font-size:.9em; }
+  #chat { flex:1; overflow-y:auto; max-width:800px; width:100%; margin:0 auto; padding:10px 20px; }
+  .msg { margin:10px 0; padding:12px 16px; border-radius:10px; max-width:85%; }
+  .me { background:#1e2c4a; margin-left:auto; }
+  .jarvis { background:var(--card); border-left:4px solid var(--accent); }
+  .jarvis b { color:var(--accent); }
+  #bar { display:flex; gap:10px; max-width:800px; width:100%; margin:0 auto; padding:10px 20px 25px; }
+  #in { flex:1; padding:14px; border-radius:8px; border:1px solid #223; background:#000; color:var(--text); font-size:1em; }
+  #send { background:var(--accent); color:#04121a; padding:14px 20px; border-radius:8px; border:none; font-weight:bold; cursor:pointer; font-size:1em; }
+  .chips { max-width:800px; width:100%; margin:0 auto; padding:0 20px 10px; display:flex; gap:8px; flex-wrap:wrap; }
+  .chips button { background:#1e2c4a; color:var(--text); border:none; padding:8px 14px; border-radius:20px; cursor:pointer; font-size:.9em; }
+</style>
+</head>
+<body>
+<header>
+  <h1>💬 AI podpora</h1>
+  <a href="index.html">← zpět na hlavní stránku</a>
+</header>
+<div id="chat"></div>
+<div class="chips">
+  <button onclick="rychle('Kolik stojí PRO?')">Cena PRO</button>
+  <button onclick="rychle('Jak nainstaluji Jarvise?')">Instalace</button>
+  <button onclick="rychle('Kde zadám licenční klíč?')">Licenční klíč</button>
+  <button onclick="rychle('Jaký je rozdíl mezi edicemi?')">Rozdíl edicí</button>
+</div>
+<div id="bar">
+  <input id="in" placeholder="Napiš dotaz…" autocomplete="off">
+  <button id="send">Odeslat</button>
+</div>
+<script>
+const chat = document.getElementById('chat');
+const input = document.getElementById('in');
+function add(who, text) {
+  const d = document.createElement('div');
+  d.className = 'msg ' + who;
+  d.innerHTML = (who === 'jarvis' ? '<b>Podpora:</b> ' : '') + text;
+  chat.appendChild(d);
+  chat.scrollTop = chat.scrollHeight;
+}
+const ZNALOSTI = [
+  { k: ['cena', 'stojí', 'kolik', 'platit', 'koupit', 'pro'], o: 'Ceník: ONLINE 0 Kč, FREE 0 Kč, PRO 199 Kč, MAX 499 Kč, TEAM 999 Kč (5 PC), FIRMA 2 999 Kč. Objednáš v košíku vpravo nahoře.' },
+  { k: ['rozdíl', 'edic', 'verzí', 'kterou', 'srovnání'], o: 'FREE/ONLINE = základ zdarma. PRO přidává ovládání PC, Discord a kódování. MAX přidává Godot, prezentace a kameru. TEAM = MAX pro 5 PC. FIRMA a MOBILE jsou zamčené.' },
+  { k: ['instalace', 'nainstalovat', 'instalovat', 'spustit', 'python'], o: '1) Stáhni jarvis-free.zip. 2) Nainstaluj Python 3.10+ z python.org. 3) Spusť instalace.bat a pak spust.bat. Podrobně v sekci Instalace na hlavní stránce.' },
+  { k: ['klíč', 'klic', 'licence', 'aktivovat', 'aktivace'], o: 'Klíč přijde mailem po objednávce. V Jarvisovi řekni nebo napiš: aktivovat + klíč. Klíč platí na 1 počítač — na jiném PC pojedou soubory jen jako FREE.' },
+  { k: ['nefunguje', 'chyba', 'nejde', 'problém', 'error'], o: 'Zkus: 1) přeinstalovat závislosti přes instalace.bat, 2) zkontrolovat mikrofon ve Windows, 3) spustit jako správce. Nepomůže-li, napiš nám e-mail s popisem chyby.' },
+  { k: ['objednávka', 'objednat', 'košík', 'kosik', 'platba'], o: 'Dej edice do košíku, klikni Odeslat objednávku a vyplň jméno + e-mail. Přihlášení není povinné.' },
+  { k: ['prohlížeč', 'prohlizec', 'online', 'mobil', 'telefon'], o: 'ONLINE verze běží v prohlížeči bez instalace (tlačítko ▶ na hlavní stránce). PRO/MAX/TEAM mají vlastní zamčené stránky na klíč.' },
+  { k: ['prezentace', 'powerpoint', 'godot'], o: 'To umí edice MAX a vyšší. V PC verzi řekni třeba: vytvor prezentaci o psech. V prohlížečové MAX verzi zkus: html prezentace o psech.' },
+  { k: ['kontakt', 'email', 'mail', 'napsat vám'], o: 'Napiš nám na objednavky@jarvis.cz. Admin odpovídá obvykle do 24 hodin.' },
+  { k: ['ahoj', 'čau', 'zdravím', 'dobrý den'], o: 'Ahoj! Jsem podpora Jarvise. Zeptej se na cenu, instalaci, licenci nebo objednávku.' },
+  { k: ['dík', 'děkuji', 'super'], o: 'Rádo se stalo! Kdyby něco, jsem tady.' }
+];
+function odpovez(q) {
+  const s = q.toLowerCase();
+  let best = null, bestN = 0;
+  for (const z of ZNALOSTI) {
+    let n = 0;
+    for (const k of z.k) if (s.includes(k)) n++;
+    if (n > bestN) { bestN = n; best = z; }
+  }
+  add('jarvis', best ? best.o : 'Na tohle neznám odpověď. Napiš nám na objednavky@jarvis.cz — ozveme se.');
+}
+function rychle(t) { add('me', t); odpovez(t); }
+document.getElementById('send').onclick = () => {
+  if (!input.value.trim()) return;
+  add('me', input.value);
+  odpovez(input.value);
+  input.value = '';
+};
+input.onkeydown = e => { if (e.key === 'Enter') document.getElementById('send').click(); };
+add('jarvis', 'Ahoj! Ptej se na ceny, instalaci, licence nebo objednávky. Zkus tlačítka pod chatem.');
+</script>
+</body>
+</html>

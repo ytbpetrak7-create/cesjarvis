@@ -68,6 +68,20 @@
 <section>
   <h2>Edice a ceník</h2>
   <div class="plans">
+    <div class="plan" id="adminPlan" style="display:none;border:2px solid gold;box-shadow:0 0 25px rgba(255,215,0,.35);">
+      <h3>ADMIN 👑</h3>
+      <div class="price">interní</div>
+      <p style="color:var(--orange,#ed7d31);font-weight:bold;">POUZE PRO ADMINY — VŠE NEOMEZENĚ</p>
+      <ul>
+        <li>Vše ze všech edicí</li>
+        <li>Neomezeně PC i prohlížečů</li>
+        <li>Generátor klíčů + evidence</li>
+        <li>Nové funkce jako první</li>
+        <li>Statistiky objednávek</li>
+        <li>Plány a interní poznámky</li>
+      </ul>
+      <a href="updates-admin.html">Admin přehled</a>
+    </div>
     <div class="plan">
       <h3>ONLINE 🌐</h3>
       <div class="price">0 Kč</div>
@@ -276,6 +290,7 @@ function vykresli() {
   document.getElementById('loginBtn').textContent = uzivatel ? ('👤 ' + uzivatel.jmeno) : '👤 Přihlásit';
   const jeAdmin = uzivatel && uzivatel.email && ADMIN_EMAILY.includes(uzivatel.email.toLowerCase().trim());
   document.getElementById('adminBtn').style.display = jeAdmin ? '' : 'none';
+  document.getElementById('adminPlan').style.display = jeAdmin ? '' : 'none';
 }
 function getObj() { try { return JSON.parse(localStorage.getItem('jarvis_objednavky') || '[]'); } catch (e) { return []; } }
 function ulozObj(o) { const a = getObj(); a.unshift(o); localStorage.setItem('jarvis_objednavky', JSON.stringify(a)); }

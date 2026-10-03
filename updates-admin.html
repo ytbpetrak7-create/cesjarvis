@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>J.A.R.V.I.S. ADMIN — interní přehled</title>
+<style>
+  :root { --bg:#0a0e17; --card:#121a2b; --accent:#ffd700; --text:#e8edf5; --muted:#8b98ad; }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:var(--bg); color:var(--text); font-family:'Segoe UI',Arial,sans-serif; line-height:1.6; }
+  header { text-align:center; padding:50px 20px 20px; }
+  header h1 { color:var(--accent); letter-spacing:4px; }
+  header a { color:var(--muted); text-decoration:none; }
+  section { max-width:800px; margin:0 auto; padding:20px; }
+  .upd { background:var(--card); border-radius:10px; padding:20px; margin-bottom:15px; border-left:4px solid var(--accent); }
+  .upd b { color:var(--accent); }
+  .ver { font-size:1.2em; font-weight:bold; }
+  .date { color:var(--muted); font-size:.9em; }
+  footer { text-align:center; padding:30px; color:var(--muted); }
+</style>
+</head>
+<body>
+<header>
+  <h1>👑 ADMIN — interní přehled</h1>
+  <a href="index.html">← zpět na hlavní stránku</a>
+</header>
+<section id="obsah" style="display:none;">
+  <div class="upd">
+    <div class="ver">Klíče</div>
+    <p>Vydávání: <b>python vytvor-klic.py EDICE email</b> → řádek vložit do Google Sheets (stav <b>aktivni</b>).<br>
+    Zneužitý klíč: v tabulce přepiš stav na <b>neaktivni</b> — do 24 hodin padne všude na FREE.<br>
+    Reinstalace u zákazníka: stav zpět na <b>aktivni</b>, nebo vydej nový klíč.</p>
+  </div>
+  <div class="upd">
+    <div class="ver">Edice a limity</div>
+    <p><b>PRO/MAX:</b> 1 PC • <b>TEAM:</b> 5 PC • <b>FIRMA:</b> bez limitu • <b>ADMIN:</b> vše neomezeně + předběžný přístup k novinkám.</p>
+  </div>
+  <div class="upd">
+    <div class="ver">Plán do příště</div>
+    <p>• Supabase kontrola klíčů (tvrdá ochrana i v prohlížeči)<br>
+    • Mobilní ovladač (odemknutí MOBILE edice)<br>
+    • iOS verze prohlížečového Jarvise</p>
+  </div>
+</section>
+<footer>J.A.R.V.I.S. • interní stránka</footer>
+<script>
+(function () {
+  const ADMINY = ['ytbpetrak7@gmail.com', 'alaalach7@gmail.com', 'petrakpetrak1212@gmail.com'];
+  try {
+    const u = JSON.parse(localStorage.getItem('jarvis_uzivatel') || 'null');
+    if (u && u.email && ADMINY.includes(u.email.toLowerCase().trim())) {
+      document.getElementById('obsah').style.display = '';
+      return;
+    }
+  } catch (e) {}
+  location.href = 'index.html';
+})();
+</script>
+</body>
+</html>

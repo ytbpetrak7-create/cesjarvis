@@ -60,6 +60,7 @@
     const s = q.toLowerCase();
     let best = null, bestN = 0;
     for (const z of ZNALOSTI) {
+      if (!z.o) continue;
       let n = 0;
       for (const k of z.k) if (s.includes(k)) n++;
       if (n > bestN) { bestN = n; best = z; }

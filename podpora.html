@@ -90,6 +90,7 @@ function formular() {
   const b = document.getElementById('formBox');
   b.style.display = b.style.display === 'none' ? '' : 'none';
 }
+const WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbw7-HriQZnx8dAeuIx7aqzaV0bwvoI-rfT1zkH69KJUcExmU5uTVfcqvU2FXav1iugg/exec';
 async function posliZpravu() {
   const j = document.getElementById('fJmeno').value.trim();
   const e = document.getElementById('fEmail').value.trim();
@@ -98,15 +99,15 @@ async function posliZpravu() {
   if (!j || !t) { stav.textContent = 'Zadej jméno a zprávu.'; return; }
   stav.textContent = 'Odesílám…';
   try {
-    const r = await fetch('https://formsubmit.co/ajax/objednavky@jarvis.cz', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-      body: JSON.stringify({ jméno: j, email: e, zpráva: t })
-    });
+    const r = await fetch(WEBAPP_URL + '?akce=zprava&jmeno=' + encodeURIComponent(j) + '&email=' + encodeURIComponent(e) + '&text=' + encodeURIComponent(t));
     const d = await r.json();
-    if (d.success) { stav.textContent = '✅ Zpráva odeslána! Ozveme se.'; return; }
+    if (d.ok) {
+      stav.textContent = '✅ Zpráva doručena podpoře! Ozveme se.';
+      document.getElementById('fText').value = '';
+      return;
+    }
     throw 0;
-  } catch (err) { stav.textContent = '⚠ Odeslání selhalo — napiš nám na objednavky@jarvis.cz.'; }
+  } catch (err) { stav.textContent = '⚠ Odeslání selhalo — zkus to prosím znovu za chvíli.'; }
 }
 document.getElementById('send').onclick = () => {
   if (!input.value.trim()) return;

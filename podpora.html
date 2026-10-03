@@ -39,6 +39,19 @@
   <input id="in" placeholder="Napiš dotaz…" autocomplete="off">
   <button id="send">Odeslat</button>
 </div>
+<div class="chips" style="padding-bottom:25px;">
+  <button onclick="formular()">✉️ Napsat nám zprávu</button>
+</div>
+<div id="formBox" style="display:none;max-width:800px;width:100%;margin:0 auto;padding:0 20px 25px;">
+  <div style="background:var(--card);padding:20px;border-radius:10px;border:1px solid var(--accent);">
+    <b style="color:var(--accent);">✉️ Zpráva podpoře</b>
+    <input id="fJmeno" placeholder="Jméno" style="width:100%;padding:12px;margin:8px 0;border-radius:6px;border:1px solid #223;background:#000;color:var(--text);">
+    <input id="fEmail" placeholder="Tvůj e-mail" style="width:100%;padding:12px;margin:8px 0;border-radius:6px;border:1px solid #223;background:#000;color:var(--text);">
+    <textarea id="fText" placeholder="Co potřebuješ?" style="width:100%;height:90px;padding:12px;margin:8px 0;border-radius:6px;border:1px solid #223;background:#000;color:var(--text);"></textarea>
+    <p id="fStav" style="min-height:1.4em;"></p>
+    <button id="fSend" style="background:var(--accent);color:#04121a;padding:12px 20px;border-radius:8px;border:none;font-weight:bold;cursor:pointer;" onclick="posliZpravu()">Odeslat zprávu</button>
+  </div>
+</div>
 <script>
 const chat = document.getElementById('chat');
 const input = document.getElementById('in');
@@ -73,6 +86,28 @@ function odpovez(q) {
   add('jarvis', best ? best.o : 'Na tohle neznám odpověď. Napiš nám na objednavky@jarvis.cz — ozveme se.');
 }
 function rychle(t) { add('me', t); odpovez(t); }
+function formular() {
+  const b = document.getElementById('formBox');
+  b.style.display = b.style.display === 'none' ? '' : 'none';
+}
+async function posliZpravu() {
+  const j = document.getElementById('fJmeno').value.trim();
+  const e = document.getElementById('fEmail').value.trim();
+  const t = document.getElementById('fText').value.trim();
+  const stav = document.getElementById('fStav');
+  if (!j || !t) { stav.textContent = 'Zadej jméno a zprávu.'; return; }
+  stav.textContent = 'Odesílám…';
+  try {
+    const r = await fetch('https://formsubmit.co/ajax/objednavky@jarvis.cz', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+      body: JSON.stringify({ jméno: j, email: e, zpráva: t })
+    });
+    const d = await r.json();
+    if (d.success) { stav.textContent = '✅ Zpráva odeslána! Ozveme se.'; return; }
+    throw 0;
+  } catch (err) { stav.textContent = '⚠ Odeslání selhalo — napiš nám na objednavky@jarvis.cz.'; }
+}
 document.getElementById('send').onclick = () => {
   if (!input.value.trim()) return;
   add('me', input.value);

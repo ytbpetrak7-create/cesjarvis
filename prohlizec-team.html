@@ -75,7 +75,7 @@ const PAGE_EDICE = 'TEAM';
 const RANK = { PRO: 1, MAX: 2, TEAM: 3, FIRMA: 4 };
 const SHEET_ID = '1K5T_SGfE-krTwfAluVsXv8VqPRl5GaPT1S2vf8f3ezw';
 const SHEET_LIST = 'jarvis';
-const WEBAPP_URL = '';
+const WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbw7-HriQZnx8dAeuIx7aqzaV0bwvoI-rfT1zkH69KJUcExmU5uTVfcqvU2FXav1iugg/exec';
 function klicOk(k) {
   const m = String(k || '').toUpperCase().trim().match(/^(PRO|MAX|TEAM|FIRMA)-[A-Z0-9]{6}-[A-Z0-9]{6}-[A-Z0-9]{6}$/);
   return m && RANK[m[1]] >= RANK[PAGE_EDICE] ? m[1] : null;

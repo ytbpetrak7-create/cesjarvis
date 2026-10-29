@@ -2,7 +2,14 @@
 <html lang="cs">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#0a0e17">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="JARVIS">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="ikona-192.png">
 <title>J.A.R.V.I.S. Online — v prohlížeči</title>
 <style>
   :root { --bg:#0a0e17; --card:#121a2b; --accent:#00d4ff; --text:#e8edf5; --muted:#8b98ad; }
@@ -23,12 +30,24 @@
   #send { background:var(--accent); color:#04121a; }
   #mic { background:#1e2c4a; color:var(--text); }
   #mic.on { background:#c00; color:#fff; }
+  #instal { display:none; margin-top:10px; background:var(--accent); color:#04121a; font-size:.9em; padding:8px 16px; border-radius:20px; }
+  @media (max-width: 600px) {
+    body { height:100dvh; }
+    header { padding:14px 10px 6px; }
+    header h1 { font-size:1.25em; letter-spacing:2px; }
+    #chat { padding:6px 10px; }
+    .msg { max-width:92%; padding:10px 12px; }
+    #bar { padding:6px 10px 14px; gap:6px; }
+    #in { font-size:16px; padding:12px; }
+    button { padding:12px 14px; }
+  }
 </style>
 </head>
 <body>
 <header>
   <h1>J.A.R.V.I.S. <span class="tag">ONLINE</span></h1>
   <a href="index.html">← zpět na hlavní stránku</a>
+  <div><button id="instal">📲 Nainstalovat do telefonu</button></div>
 </header>
 <div id="chat"></div>
 <div id="bar">
@@ -60,25 +79,28 @@ const vtipy = [
   "Proč Java vývojáři nosí brýle? Protože nevidí sharp.",
   "SQL dotaz vejde do baru a ptá se dvou tabulek: Můžu se přidat?"
 ];
+function bezDiakritiky(t) {
+  return (t || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+}
 function odpovez(q) {
-  const s = q.toLowerCase();
+  const s = bezDiakritiky(q);
   let r = "";
-  if (/ahoj|čau|nazdar|zdravím|dobrý den/.test(s)) r = "Zdravím! Systémy jsou online. Co potřebuješ?";
-  else if (/kolik je|hodin|čas/.test(s)) r = "Je " + new Date().toLocaleTimeString('cs-CZ', { hour: '2-digit', minute: '2-digit' }) + ".";
-  else if (/datum|den je|kolikátého/.test(s)) r = "Dnes je " + new Date().toLocaleDateString('cs-CZ', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }) + ".";
+  if (/ahoj|cau|nazdar|zdravim|dobry den/.test(s)) r = "Zdravím! Systémy jsou online. Co potřebuješ?";
+  else if (/kolik je|hodin|cas/.test(s)) r = "Je " + new Date().toLocaleTimeString('cs-CZ', { hour: '2-digit', minute: '2-digit' }) + ".";
+  else if (/datum|den je|jaky je den|jaky den|kolika/.test(s)) r = "Dnes je " + new Date().toLocaleDateString('cs-CZ', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }) + ".";
   else if (/vtip|vtipko|zabav/.test(s)) r = vtipy[Math.floor(Math.random() * vtipy.length)];
-  else if (/otevři youtube|pust youtube/.test(s)) { r = "Otevírám YouTube."; window.open('https://youtube.com', '_blank'); }
-  else if (/otevři google|pust google/.test(s)) { r = "Otevírám Google."; window.open('https://google.com', '_blank'); }
-  else if (/otevři seznam/.test(s)) { r = "Otevírám Seznam."; window.open('https://seznam.cz', '_blank'); }
+  else if (/otevri youtube|pust youtube|youtube/.test(s)) { r = "Otevírám YouTube."; window.open('https://youtube.com', '_blank'); }
+  else if (/otevri google|pust google|google/.test(s)) { r = "Otevírám Google."; window.open('https://google.com', '_blank'); }
+  else if (/otevri seznam|seznam/.test(s)) { r = "Otevírám Seznam."; window.open('https://seznam.cz', '_blank'); }
   else if (/hledej|vyhledej|najdi|co je/.test(s)) {
-    const dotaz = s.replace(/hledej|vyhledej|najdi|mi|prosím|co je|co to je/g, '').trim();
+    const dotaz = s.replace(/hledej|vyhledej|najdi|mi|prosim|co je|co to je/g, '').trim();
     if (dotaz) { r = "Vyhledávám: " + dotaz; window.open('https://www.google.com/search?q=' + encodeURIComponent(dotaz), '_blank'); }
     else r = "Co mám vyhledat?";
   }
   else if (/kdo jsi|co jsi/.test(s)) r = "Jsem Jarvis Online — běžím přímo v prohlížeči, bez instalace.";
-  else if (/co umíš|pomoc|help/.test(s)) r = "Umím: čas, datum, vtip, otevřít YouTube/Google/Seznam, vyhledávat. Vyšší edice umí víc!";
-  else if (/díky|děkuji/.test(s)) r = "Není zač!";
-  else if (/nudím se/.test(s)) r = "Můžu ti říct vtip, nebo něco vyhledat. Co chceš?";
+  else if (/co umis|pomoc|help/.test(s)) r = "Umím: čas, datum, vtip, otevřít YouTube/Google/Seznam, vyhledávat. Vyšší edice umí víc!";
+  else if (/diky|dekuji/.test(s)) r = "Není zač!";
+  else if (/nudim se/.test(s)) r = "Můžu ti říct vtip, nebo něco vyhledat. Co chceš?";
   else r = ["Hmm, zajímavé.", "Rozumím. Zkus třeba: kolik je hodin?", "Tohle online neumím — podívej se na vyšší edice!"][Math.floor(Math.random() * 3)];
   add('jarvis', r);
   speak(r);
@@ -103,6 +125,28 @@ if (SR) {
   mic.onclick = () => alert('Tvůj prohlížeč neumí hlasový vstup. Zkus Chrome.');
 }
 add('jarvis', 'ONLINE verze. Napiš příkaz nebo klikni na mikrofon a mluv česky.');
+
+// --- Instalace jako aplikace do telefonu (PWA) ---
+let odlozenaInstalace = null;
+const instalBtn = document.getElementById('instal');
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  odlozenaInstalace = e;
+  instalBtn.style.display = '';
+});
+instalBtn.onclick = async () => {
+  if (!odlozenaInstalace) {
+    add('jarvis', 'V menu prohlížeče dej „Přidat na plochu". Na iPhonu: Sdílet → Přidat na plochu.');
+    return;
+  }
+  odlozenaInstalace.prompt();
+  await odlozenaInstalace.userChoice;
+  odlozenaInstalace = null;
+  instalBtn.style.display = 'none';
+};
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js').catch(() => {});
+}
 </script>
 </body>
 </html>

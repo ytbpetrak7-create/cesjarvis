@@ -26,6 +26,22 @@
 </header>
 <section id="obsah" style="display:none;">
   <div class="upd">
+    <div class="ver">v1.4 — admin: chování jako člověk</div>
+    <div class="date">29. 10. 2026</div>
+    <p><b>Novinky:</b> admin Jarvis si pamatuje, co mu řekneš, a mluví přirozeněji — bez opakování stejných frází.</p>
+    <p><b>Paměť:</b><br>
+    • „jmenuji se Petr" / „říkej mi Petře" — zapamatuje si jméno<br>
+    • „mám rád kávu" / „pracuji na Godotu" — uloží do <code>clovek_pamet.json</code><br>
+    • „co o mně víš" / „jak si mě pamatuješ" — shrne, co o tobě ví</p>
+    <p><b>Lidštější reakce:</b><br>
+    • pozdravy podle denní doby (ráno / dopoledne / večer / noc)<br>
+    • empatie: únava, smutek, stres, radost, nuda<br>
+    • názory s nejistotou („osobně bych řekl…") a otázka zpět<br>
+    • když nerozumí, řekne to lidsky a zkusí to jinak<br>
+    • neopakuje stejné fráze po sobě</p>
+    <p><b>Jen admin:</b> modul <code>admin_clovek.py</code> není v běžném ZIPu — v ostatních edicích zůstává původní chování.</p>
+  </div>
+  <div class="upd">
     <div class="ver">v1.3 — admin: index funkcí</div>
     <div class="date">29. 10. 2026</div>
     <p><b>Novinky:</b> Jarvis projde soubor nebo celý projekt, načte <b>všechny funkce</b> (Python přes AST, JS/TS, GDScript, C#, PHP, Java, Lua přes vzory) a uloží si je do indexu.</p>

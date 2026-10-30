@@ -26,6 +26,18 @@
 </header>
 <section id="obsah" style="display:none;">
   <div class="upd">
+    <div class="ver">v1.5 — admin: vidí plochu a učí se z ní</div>
+    <div class="date">30. 10. 2026</div>
+    <p><b>Novinky:</b> admin Jarvis sleduje tvoji plochu, dělá si snímky a pamatuje si, co na ní bylo.</p>
+    <p><b>Sledování plochy:</b><br>
+    • „sleduj mě" — pravidelně (cca každých 2 min) udělá snímek plochy a uloží si, jakou aplikaci máš otevřenou<br>
+    • „co mám na obrazovce" / „co jsem dělal" — vypíše poslední snímky s časem a aplikací<br>
+    • „co vidíš na mé obrazovce" — lidský komentář k tomu, co Jarvis vidí<br>
+    • Snímky se ukládají do <code>screen_snimky/</code>, údaje do <code>screen_log.json</code></p>
+    <p><b>Lidské komentáře:</b> při automatickém snímku Jarvis může říct třeba „Vidím, že máš otevřené Chrome s hodně textem a modrými barvami. Pracuješ na něčem zajímavým?"</p>
+    <p><b>Jen admin:</b> modul <code>admin_clovek.py</code> není v běžném ZIPu — v ostatních edicích zůstává původní chování.</p>
+  </div>
+  <div class="upd">
     <div class="ver">v1.4 — admin: chování jako člověk</div>
     <div class="date">29. 10. 2026</div>
     <p><b>Novinky:</b> admin Jarvis si pamatuje, co mu řekneš, a mluví přirozeněji — bez opakování stejných frází.</p>

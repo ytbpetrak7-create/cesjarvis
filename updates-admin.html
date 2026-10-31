@@ -26,6 +26,20 @@
 </header>
 <section id="obsah" style="display:none;">
   <div class="upd">
+    <div class="ver">v1.7 — admin: sebě-vylepšování (vylepšuje sám sebe)</div>
+    <div class="date">31. 10. 2026</div>
+    <p><b>Novinky:</b> admin Jarvis teď umí vylepšovat svůj vlastní kód automaticky na pozadí.</p>
+    <p><b>Sebě-vylepšování:</b><br>
+    • běží na pozadí (cca každých 30 min) bez toho, abyste museli něco říkat<br>
+    • analyzuje vlastní zdrojový kód přes AST a hledá místa k vylepšení<br>
+    • přidává chybějící docstringy, flush=True k printům, ošetření chyb<br>
+    • před každou změnou vytvoří zálohu do <code>sebevylep_zalohy/</code><br>
+    • všechny změny se zapisují do <code>sebevylep_log.json</code><br>
+    • pokaždé zkontroluje, že nový kód je syntakticky správný<br>
+    • ruční spuštění: „vylepš se“ nebo „vylepš svuj kod“</p>
+    <p><b>Jen admin:</b> modul <code>admin_sebevylep.py</code> není v běžném ZIPu — v ostatních edicích zůstává původní chování.</p>
+  </div>
+  <div class="upd">
     <div class="ver">v1.6 — admin: 1000% lepší (lidštější, chytřejší, proaktivní)</div>
     <div class="date">30. 10. 2026</div>
     <p><b>Novinky:</b> admin Jarvis je mnohem přirozenější, chytřejší a proaktivnější.</p>
